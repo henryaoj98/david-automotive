@@ -69,12 +69,12 @@ svg{fill:currentColor}
 
 /* sections common */
 section{position:relative}
-.hero{height:260vh}
+.hero{height:400vh;height:400dvh}
 .hero-sticky{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden;display:grid;place-items:center}
 .hero-bg{position:absolute;inset:0;opacity:0;display:none}.hero-bg img{filter:grayscale(.3) brightness(.55)}
-.hero-title{position:absolute;top:17vh;left:0;right:0;text-align:center;font-size:clamp(56px,6.3vw,96px);max-width:7.5em;margin:auto;line-height:1}
-.hero-sub{position:absolute;bottom:9vh;left:0;right:0;text-align:center;font-size:15px;line-height:1.5}
-.hero-statement{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:clamp(40px,6vw,90px);line-height:1;pointer-events:none}
+.hero-title{position:absolute;z-index:3;top:9vh;left:0;right:0;text-align:center;font-size:clamp(56px,6.3vw,96px);max-width:7.5em;margin:auto;line-height:1}
+.hero-sub{position:absolute;z-index:3;bottom:9vh;left:0;right:0;text-align:center;font-size:15px;line-height:1.5}
+.hero-statement{position:absolute;z-index:4;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:clamp(40px,6vw,90px);line-height:1;pointer-events:none}
 .hero-statement .char{opacity:0}
 
 .approach{height:220vh}
@@ -162,3 +162,14 @@ section{position:relative}
  .gate-actions{gap:24px}.gate-btn{font-size:18px}.menu-foot{flex-direction:column;gap:6px;text-align:center}
 }
 @media(prefers-reduced-motion:reduce){.btn::after{animation:none}}
+
+/* ---------- hero film ---------- */
+.hero-media{position:absolute;inset:0;z-index:1;overflow:hidden;background:#000}
+.hero-tilt{position:absolute;inset:-2%;will-change:transform}
+.hero-intro,.hero-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.hero-canvas{opacity:0}
+.hero.film-ready .hero-canvas{opacity:1}.hero.film-ready .hero-intro{visibility:hidden}
+.hero-vignette{position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(12,12,12,.55),transparent 32%,transparent 75%,#0c0c0c),radial-gradient(120% 90% at 50% 55%,transparent 50%,rgba(0,0,0,.7));opacity:1}
+.hero-edge{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 #0c0c0c}
+@media (max-width:1023px){.hero-tilt{inset:0}}
+@media (orientation:portrait){.hero-tilt{-webkit-mask:linear-gradient(transparent 27%,#000 37%,#000 64%,transparent 73%);mask:linear-gradient(transparent 27%,#000 37%,#000 64%,transparent 73%)}.hero-intro{inset:auto;left:50%;top:50%;width:170%;height:auto;transform:translate(-50%,-50%)}}

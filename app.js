@@ -40,23 +40,97 @@
   $('#menuBtn').addEventListener('click', () => { const o = body.classList.toggle('menu-open'); o ? lenis.stop() : lenis.start(); });
   addEventListener('keydown', e => e.key === 'Escape' && closeMenu());
 
-  // ---------- gate ----------
+  // ---------- hero film: intro clip once, then scroll-scrubbed frame sequence ----------
   const heroTitle = splitLines($('.hero-title'));
   gsap.set(heroTitle, { yPercent: 110 }); gsap.set('.hero-sub', { opacity: 0, y: 20 });
+  const hero = $('.hero'), vid = $('.hero-intro'), cv = $('.hero-canvas'), ctx = cv.getContext('2d'), tiltEl = $('.hero-tilt');
+  const small = innerWidth < 1024;
+  const FRAMES = 121, dir = small ? 'video/scroll-m/' : 'video/scroll-d/';
+  vid.src = small ? 'video/intro-m.mp4' : 'video/intro-d.mp4';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const imgs = [];
+  for (let i = 0; i < FRAMES; i++) { const im = new Image(); im.decoding = 'async'; im.src = `${dir}${String(i + 1).padStart(3, '0')}.webp`; imgs[i] = im; }
+  let curFrame = -1;
+  const sizeCanvas = () => { const d = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d); curFrame = -1; draw(lastWanted); };
+  const drawCover = im => { const cw = cv.width, ch = cv.height, portrait = ch > cw;
+    const s = portrait ? cw * 1.7 / im.naturalWidth : Math.max(cw / im.naturalWidth, ch / im.naturalHeight);
+    if (portrait) ctx.clearRect(0, 0, cw, ch);
+    const w = im.naturalWidth * s, hh = im.naturalHeight * s; ctx.drawImage(im, (cw - w) / 2, (ch - hh) / 2, w, hh); };
+  let lastWanted = 0;
+  function draw(i) {
+    lastWanted = i;
+    // nearest loaded frame so scrubbing never blanks
+    let k = i; while (k > 0 && !(imgs[k].complete && imgs[k].naturalWidth)) k--;
+    const im = imgs[k]; if (!im.complete || !im.naturalWidth || k === curFrame) return;
+    curFrame = k; drawCover(im);
+  }
+  imgs[0].onload = () => draw(lastWanted);
+  addEventListener('resize', sizeCanvas); sizeCanvas();
+
+  let introDone = false;
+  const finishIntro = () => { if (introDone) return; introDone = true; draw(lastWanted); hero.classList.add('film-ready'); };
+  vid.addEventListener('ended', finishIntro);
+  const playText = d => {
+    gsap.to(heroTitle, { yPercent: 0, duration: 1.6, ease: 'expo.out', stagger: .06, delay: d });
+    gsap.to('.hero-sub', { opacity: 1, y: 0, duration: 1.4, ease: 'expo.out', delay: d + .8 });
+  };
   const enter = () => {
     $('#gate').classList.add('out'); body.classList.remove('is-gated'); lenis.start(); scrollTo(0, 0);
-    gsap.to(heroTitle, { yPercent: 0, duration: 1.6, ease: 'expo.out', stagger: .06, delay: .35 });
-    gsap.to('.hero-sub', { opacity: 1, y: 0, duration: 1.4, ease: 'expo.out', delay: .9 });
+    if (reduced) { finishIntro(); playText(.2); return; }
+    vid.currentTime = 0; const p = vid.play(); if (p && p.catch) p.catch(finishIntro);
+    playText(1.4);
   };
+  window.__heroVid = vid;
   $$('[data-enter]').forEach(b => b.addEventListener('click', enter));
 
-  // ---------- hero → statement ----------
+  // ---------- hero: pinned sticky track (3 viewports: 2 drive-in, .6 statement, .4 outro) ----------
+  const D = 2 / 3;
+  let introSeg = 0;
   const stChars = splitChars($('.hero-statement'));
-  const ht = gsap.timeline({ scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom bottom', scrub: true } });
-  ht.to('.hero-title', { opacity: 0, y: -80, filter: 'blur(8px)', duration: .25 }, 0)
-    .to('.hero-sub', { opacity: 0, duration: .15 }, 0)
-    .fromTo(stChars, { opacity: 0, filter:'blur(6px)' }, { opacity: 1, filter:'blur(0px)', stagger: .008, duration: .08, ease: 'none' }, .2)
-    .to('.hero-statement', { opacity: 0, y: -60, duration: .15 }, .85);
+  const ht = gsap.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom bottom', scrub: true,
+    onUpdate: s => {
+      introSeg = Math.min(1, s.progress / D);
+      if (s.progress > 0.002 && !introDone) { vid.pause(); finishIntro(); }
+      draw(Math.round(introSeg * (FRAMES - 1)));
+      armSnap(s);
+    } } });
+  ht.to('.hero-title', { opacity: 0, y: -80, filter: 'blur(8px)', duration: D * .35 }, 0)
+    .to('.hero-sub', { opacity: 0, duration: D * .2 }, 0)
+    .to('.hero-vignette', { opacity: 1, duration: D }, 0)
+    .to('.hero-media', { opacity: 0, duration: .1, ease: 'power1.in' }, D)
+    .fromTo(stChars, { opacity: 0, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0px)', stagger: .004, duration: .05, ease: 'none' }, D + .07)
+    .to('.hero-statement', { opacity: 0, y: -60, duration: .1 }, .9);
+
+  // snap forward: stop past 60% of the drive-in and it glides to the end of the clip (2s)
+  let snapT = 0, snapping = false;
+  function armSnap(s) {
+    clearTimeout(snapT); if (snapping) return;
+    snapT = setTimeout(() => {
+      if (s.direction > 0 && introSeg > .6 && introSeg < .995) {
+        snapping = true;
+        lenis.scrollTo(s.start + (s.end - s.start) * D, { duration: 2, easing: t => 1 - Math.pow(1 - t, 3), onComplete: () => snapping = false });
+        setTimeout(() => snapping = false, 2100);
+      }
+    }, 160);
+  }
+
+  // ---------- hero: pointer tilt (desktop, fine pointer) ----------
+  if (matchMedia('(hover:hover) and (pointer:fine)').matches) {
+    gsap.set(tiltEl, { transformPerspective: 1200, transformOrigin: '50% 50%' });
+    const q = p => gsap.quickTo(tiltEl, p, { duration: .7, ease: 'power3.out' });
+    const T = { xPercent: q('xPercent'), yPercent: q('yPercent'), rotationY: q('rotationY'), rotationX: q('rotationX'), scale: q('scale') };
+    const smooth = t => t * t * (3 - 2 * t);
+    let px = 0, py = 0, active = false;
+    const apply = () => {
+      const s = active ? 1 - smooth(Math.min(1, introSeg / .12)) : 0;
+      const x = px * s, y = py * s;
+      T.xPercent(.6 * x); T.yPercent(.6 * y); T.rotationY(-(.5 * x)); T.rotationX(.5 * y); T.scale(1 + .025 * s);
+    };
+    addEventListener('pointermove', e => { px = e.clientX / innerWidth * 2 - 1; py = e.clientY / innerHeight * 2 - 1; active = true; apply(); }, { passive: true });
+    document.documentElement.addEventListener('pointerleave', () => { active = false; apply(); });
+    addEventListener('blur', () => { active = false; apply(); });
+    ScrollTrigger.create({ trigger: hero, start: 'top top', end: 'bottom bottom', onUpdate: apply });
+  }
 
   // ---------- approach card expand ----------
   if (desktop) {
