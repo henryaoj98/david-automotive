@@ -1,53 +1,145 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>David Automotive — Considered Vehicle Personalisation</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css"></head><body>
-<div class="loader" id="loader"><div class="loader-mark">DAVID<span>AUTOMOTIVE</span></div><div class="loader-bar"><i></i></div><div class="loader-count" id="count">0</div></div>
-<div class="cursor" id="cursor"><span>Drag</span></div>
-<header class="hdr" id="hdr"><a href="#top" class="logo" aria-label="David Automotive">
-<svg viewBox="0 0 40 40" width="34" height="34"><path d="M8 6h12c9 0 14 6 14 14s-5 14-14 14H8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 12v16M14 20h8" stroke="#C5A064" stroke-width="2"/></svg>
-<b>DAVID<small>AUTOMOTIVE</small></b></a>
-<nav class="nav"><a href="#services">Services</a><a href="#builds">Builds</a><a href="#stock">Stock</a><a href="#contact">Contact</a></nav>
-<a href="#contact" class="btn btn-sm">Enquire</a><button class="burger" id="burger" aria-label="Menu"><i></i><i></i></button></header>
-<div class="menu" id="menu"><nav><a href="#services">Services</a><a href="#builds">Builds</a><a href="#stock">Stock</a><a href="#contact">Contact</a></nav><p>Phone: (000) 000-0000 · Address TBA</p></div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>David Automotive | Bespoke Vehicle Styling &amp; Builds</title>
+<meta name="description" content="David Automotive is a bespoke automotive studio for styling, performance and finishing.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 40%22%3E%3Cpath fill=%22%23F2F1ED%22 d=%22M4 36 24 6h8L12 36zM20 36 34 15l4 6-10 15zM36 6h8l16 30h-8z%22/%3E%3C/svg%3E"><link rel="stylesheet" href="style.css"></head>
+<body class="is-gated">
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="mark" viewBox="0 0 64 40"><path d="M4 36 24 6h8L12 36z"/><path d="M20 36 34 15l4 6-10 15z"/><path d="M36 6h8l16 30h-8z"/></symbol>
+<symbol id="ig" viewBox="0 0 24 24"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM17.3 5.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zM12 2c-2.7 0-3 0-4.1.1C4.3 2.3 2.3 4.3 2.1 7.9 2 9 2 9.3 2 12s0 3 .1 4.1c.2 3.6 2.2 5.6 5.8 5.8 1.1.1 1.4.1 4.1.1s3 0 4.1-.1c3.6-.2 5.6-2.2 5.8-5.8.1-1.1.1-1.4.1-4.1s0-3-.1-4.1c-.2-3.6-2.2-5.6-5.8-5.8C15 2 14.7 2 12 2zm0 1.8c2.7 0 3 0 4 .1 2.7.1 4 1.4 4.1 4.1.1 1 .1 1.3.1 4s0 3-.1 4c-.1 2.7-1.4 4-4.1 4.1-1 .1-1.3.1-4 .1s-3 0-4-.1c-2.7-.1-4-1.4-4.1-4.1-.1-1-.1-1.3-.1-4s0-3 .1-4C4 5.3 5.3 4 8 3.9c1-.1 1.3-.1 4-.1z"/></symbol>
+<symbol id="tt" viewBox="0 0 24 24"><path d="M16.6 2h-3.4v13.2a2.9 2.9 0 1 1-2.1-2.8V9a6.3 6.3 0 1 0 5.5 6.2V8.5a8 8 0 0 0 4.6 1.5V6.6a4.6 4.6 0 0 1-4.6-4.6z"/></symbol>
+<symbol id="fb" viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></symbol>
+<symbol id="ph" viewBox="0 0 24 24"><path d="M5 3h3l2 5-2.5 1.5a11 11 0 0 0 5 5L14 12l5 2v3a2 2 0 0 1-2 2A15 15 0 0 1 3 5a2 2 0 0 1 2-2z"/></symbol>
+</defs></svg>
+
+<!-- Entry gate -->
+<div class="gate" id="gate">
+  <a class="gate-logo"><svg><use href="#mark"/></svg></a>
+  <p class="gate-line label">Bespoke vehicles shaped around the driver.<br>Personal by design, never off the shelf.</p>
+  <div class="gate-actions"><button class="gate-btn" data-enter>Accept &amp; Enter</button><button class="gate-btn" data-enter>Decline &amp; Enter</button></div>
+  <p class="gate-note">Placeholder notice. Analytics and cookie wording TBA.</p>
+</div>
+
+<header class="hdr" id="hdr">
+  <div class="hdr-social"><a aria-label="Instagram (TBA)"><svg><use href="#ig"/></svg></a><a aria-label="TikTok (TBA)"><svg><use href="#tt"/></svg></a><a aria-label="Facebook (TBA)"><svg><use href="#fb"/></svg></a></div>
+  <a class="hdr-phone" aria-label="Call (placeholder)"><svg><use href="#ph"/></svg></a>
+  <a href="#top" class="logo" aria-label="David Automotive home"><svg class="logo-mark"><use href="#mark"/></svg><span class="logo-word">DAVID<br><small>AUTOMOTIVE</small></span></a>
+  <button class="hdr-menu" id="menuBtn" aria-label="Open menu"><em><span data-menu="closed">Navigate</span><span data-menu="open">Close</span></em><i class="burger"><span></span><span></span><span></span></i></button>
+</header>
+
+<div class="menu" id="menu"><div class="menu-bg"></div>
+  <nav class="menu-nav"><a href="#top"><span>Home</span></a><a href="#builds"><span>Builds</span></a><a href="#stock"><span>Stock</span></a><a href="#contact"><span>Contact</span></a></nav>
+  <div class="menu-foot label"><span>Phone (000) 000-0000</span><span>Address TBA</span><span>hello@[domain-TBA].com</span></div>
+</div>
+
+<div class="progress"><i id="progress"></i></div>
+
 <main id="top">
-<section class="hero"><div class="hero-img" data-speed="0.3"><img src="assets/hero.jpg" alt=""></div><div class="hero-shade"></div>
-<div class="hero-copy"><p class="eyebrow reveal">Personalisation Studio · Est. [Year TBA]</p><h1 class="split">Built To Be <em>Remembered</em></h1>
-<div class="hero-row reveal"><p>Thoughtful styling, finishing and protection for drivers who want their car to feel unmistakably their own.</p><a href="#contact" class="btn">Start a project <span>→</span></a></div></div>
-<div class="scroll-cue"><span></span>Scroll</div></section>
-<section class="intro"><h2 class="split-words">We don’t chase trends. We study each car, listen to its owner, and shape every detail until the whole thing feels inevitable.</h2></section>
-<section class="approach"><div class="sec-head"><span class="num">01</span><h2 class="split">How We Work</h2></div>
-<div class="pillars"><article class="reveal"><span>i.</span><h3>Character</h3><p>Every brief starts with who you are and how you drive. The car should reflect that, not a catalogue.</p></article>
-<article class="reveal"><span>ii.</span><h3>Craft</h3><p>Precise fitment, honest materials and finishes that still look right years after the handover.</p></article>
-<article class="reveal"><span>iii.</span><h3>Balance</h3><p>Exterior, cabin, wheels and light are planned together so nothing feels bolted on.</p></article></div></section>
-<section class="services" id="services"><div class="sec-head"><span class="num">02</span><h2 class="split">Every surface, considered.</h2></div>
-<div class="svc-list">
-<a class="svc" data-img="assets/b1.jpg"><span>01</span><h3>Body Styling</h3><p>Aero, trims and colour changes</p><i>→</i></a>
-<a class="svc" data-img="assets/b6.jpg"><span>02</span><h3>Interiors</h3><p>Leather, Alcantara and stitching</p><i>→</i></a>
-<a class="svc" data-img="assets/b4.jpg"><span>03</span><h3>Wheels</h3><p>Forged fitments and finishing</p><i>→</i></a>
-<a class="svc" data-img="assets/b3.jpg"><span>04</span><h3>Lighting</h3><p>Upgrades, tints and signatures</p><i>→</i></a>
-<a class="svc" data-img="assets/b5.jpg"><span>05</span><h3>Exhaust</h3><p>Tone, flow and valve control</p><i>→</i></a>
-<a class="svc" data-img="assets/b2.jpg"><span>06</span><h3>Protection</h3><p>PPF, ceramic and detailing</p><i>→</i></a>
-</div><div class="svc-float" id="svcFloat"><img alt=""></div></section>
-<section class="marquee" aria-hidden="true"><div class="mq-track"><span>Ordinary Stops Here</span><span>✦</span><span>Ordinary Stops Here</span><span>✦</span><span>Ordinary Stops Here</span><span>✦</span><span>Ordinary Stops Here</span><span>✦</span></div></section>
-<section class="builds" id="builds"><div class="sec-head"><span class="num">03</span><h2 class="split">Recent Builds</h2><div class="arrows"><button id="prev">←</button><button id="next">→</button></div></div>
-<div class="slider" id="slider"><div class="track" id="track">
-<figure class="card"><div class="ph"><img src="assets/b1.jpg" alt="Build placeholder"></div><figcaption><b>Project One</b><span>Placeholder — real build TBA</span></figcaption></figure>
-<figure class="card"><div class="ph"><img src="assets/b2.jpg" alt="Build placeholder"></div><figcaption><b>Project Two</b><span>Placeholder — real build TBA</span></figcaption></figure>
-<figure class="card"><div class="ph"><img src="assets/b3.jpg" alt="Build placeholder"></div><figcaption><b>Project Three</b><span>Placeholder — real build TBA</span></figcaption></figure>
-<figure class="card"><div class="ph"><img src="assets/b4.jpg" alt="Build placeholder"></div><figcaption><b>Project Four</b><span>Placeholder — real build TBA</span></figcaption></figure>
-<figure class="card"><div class="ph"><img src="assets/b5.jpg" alt="Build placeholder"></div><figcaption><b>Project Five</b><span>Placeholder — real build TBA</span></figcaption></figure>
-</div></div><div class="progress"><i id="prog"></i></div></section>
-<section class="stock" id="stock"><div class="sec-head"><span class="num">04</span><h2 class="split">Available Stock</h2></div>
-<div class="stock-grid">
-<article class="veh reveal"><div class="ph"><img src="assets/b4.jpg" alt=""></div><h3>Vehicle Listing TBA</h3><p>Year · Mileage · Spec TBA</p><b>$ Price TBA</b></article>
-<article class="veh reveal"><div class="ph"><img src="assets/b6.jpg" alt=""></div><h3>Vehicle Listing TBA</h3><p>Year · Mileage · Spec TBA</p><b>$ Price TBA</b></article>
-<article class="veh reveal"><div class="ph"><img src="assets/b5.jpg" alt=""></div><h3>Vehicle Listing TBA</h3><p>Year · Mileage · Spec TBA</p><b>$ Price TBA</b></article></div></section>
-<section class="cta" id="contact"><div class="cta-img" data-speed="0.2"><img src="assets/b3.jpg" alt=""></div><div class="cta-inner"><p class="eyebrow">Let’s talk</p><h2 class="split">Make It <em>Yours</em></h2>
-<form class="form" onsubmit="event.preventDefault();this.querySelector('button').textContent='Thanks — placeholder form';"><input placeholder="Name" required><input type="email" placeholder="Email" required><input placeholder="Vehicle"><textarea placeholder="Tell us about your project"></textarea><button class="btn">Send enquiry <span>→</span></button></form></div></section>
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-sticky">
+      <div class="hero-bg"><img src="assets/hero.jpg" alt=""></div>
+      <h1 class="hero-title serif" data-split>Built To Be Remembered</h1>
+      <p class="hero-sub">An independent studio for bespoke styling,<br>performance and finishing.</p>
+      <h2 class="hero-statement serif" data-split-chars>We Don’t Sell Kits<br>We Shape Them Around You</h2>
+    </div>
+  </section>
+
+  <!-- APPROACH -->
+  <section class="approach" id="approach">
+    <div class="approach-sticky">
+      <div class="approach-card"><img src="assets/approach.jpg" alt="">
+        <h2 class="approach-title serif"><span>How We Approach</span><span>Every Single Car</span></h2>
+        <ul class="approach-tags label"><li>Styling</li><li>Performance</li><li>Finishing</li><li>Protection</li></ul>
+        <div class="approach-copy"><p>Each choice is deliberate. Each detail earns its place, guided by your taste, your driving and your standards.</p><a href="#contact" class="btn" data-btn>Start Your Project</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLARS -->
+  <section class="pillars" id="pillars">
+    <div class="pillars-sticky">
+      <div class="pillars-bg"><img src="assets/p1.jpg" alt=""><img src="assets/p2.jpg" alt=""><img src="assets/p3.jpg" alt=""></div>
+      <div class="pillars-inner">
+        <div class="pillars-media"><img src="assets/p1.jpg" alt=""><img src="assets/p2.jpg" alt=""><img src="assets/p3.jpg" alt=""></div>
+        <div class="pillars-text">
+          <article><p class="count serif">01 <span>/ 03</span></p><h3 class="serif">Character</h3><p>It starts with the driver. Taste, routine and personality shape the brief long before a single part is chosen.</p><a href="#contact" class="btn" data-btn>Start Your Project</a></article>
+          <article><p class="count serif">02 <span>/ 03</span></p><h3 class="serif">Clarity</h3><p>Exterior, cabin and performance are planned together as one considered vision, not a list of add-ons.</p><a href="#contact" class="btn" data-btn>Start Your Project</a></article>
+          <article><p class="count serif">03 <span>/ 03</span></p><h3 class="serif">Harmony</h3><p>Every change is chosen for balance and restraint, so the finished car feels complete and unmistakably yours.</p><a href="#contact" class="btn" data-btn>Start Your Project</a></article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES INTRO -->
+  <section class="svc-intro">
+    <div class="svc-intro-text">
+      <h2 class="serif" data-highlight>A car should make its point while standing still. Every surface, stitch and finish is weighed up.</h2>
+      <p>From exterior styling and cabin work to performance, detailing and custom finishes, every service is shaped to sharpen the car’s character without shouting over it.</p>
+      <a href="#contact" class="btn" data-btn>Start Your Project</a>
+    </div>
+    <div class="svc-intro-media"><img src="assets/statement.jpg" alt=""></div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services" id="services">
+    <div class="svc-media"><div class="svc-media-sticky">
+      <img src="assets/s1.jpg" alt=""><img src="assets/s2.jpg" alt=""><img src="assets/s3.jpg" alt=""><img src="assets/s4.jpg" alt=""><img src="assets/s5.jpg" alt=""><img src="assets/s6.jpg" alt="">
+    </div></div>
+    <div class="svc-list">
+      <article class="svc"><p class="label">Service</p><h3 class="serif">Body Styling</h3><p>Aero, carbon accents and exterior refinement that change the car’s stance while respecting the original design.</p><a href="#contact" class="btn" data-btn>Start Your Project</a><img class="svc-m" src="assets/s1.jpg" alt=""></article>
+      <article class="svc"><p class="label">Service</p><h3 class="serif">Performance</h3><p>Power, response and handling developed carefully, so the car feels sharper without losing its everyday manners.</p><a href="#contact" class="btn" data-btn>Start Your Project</a><img class="svc-m" src="assets/s2.jpg" alt=""></article>
+      <article class="svc"><p class="label">Service</p><h3 class="serif">Wheels</h3><p>Fitment, finish and specification matched to the car, so the stance looks settled from every angle.</p><a href="#contact" class="btn" data-btn>Start Your Project</a><img class="svc-m" src="assets/s3.jpg" alt=""></article>
+      <article class="svc"><p class="label">Service</p><h3 class="serif">Lighting</h3><p>Upgrades and signature details that give the car a recognisable face after dark.</p><a href="#contact" class="btn" data-btn>Start Your Project</a><img class="svc-m" src="assets/s4.jpg" alt=""></article>
+      <article class="svc"><p class="label">Service</p><h3 class="serif">Exhaust</h3><p>Sound and flow tuned to suit how you drive, from refined cruising to something with more voice.</p><a href="#contact" class="btn" data-btn>Start Your Project</a><img class="svc-m" src="assets/s5.jpg" alt=""></article>
+      <article class="svc"><p class="label">Service</p><h3 class="serif">Protection</h3><p>Paint protection film, ceramic coatings and detailing that keep the finish looking like the day it left us.</p><a href="#contact" class="btn" data-btn>Start Your Project</a><img class="svc-m" src="assets/s6.jpg" alt=""></article>
+    </div>
+  </section>
+
+  <!-- STANDARD ENDS -->
+  <section class="ends" id="ends">
+    <div class="ends-sticky">
+      <div class="ends-img"><img src="assets/ends.jpg" alt=""></div>
+      <h2 class="ends-word serif">Standard</h2>
+      <div class="ends-copy"><h2 class="serif">Stops Here</h2><p>Finished cars that carry intent, individuality and restraint in equal measure.</p></div>
+    </div>
+  </section>
+
+  <!-- BUILDS -->
+  <section class="feature" id="builds">
+    <div class="feature-img"><img src="assets/builds.jpg" alt=""></div>
+    <div class="feature-copy"><h2 class="serif" data-split>Previous Builds</h2><p>A look back at finished projects, each shaped by craft, character and the person who drives it. Real builds TBA.</p><a href="#builds" class="btn" data-btn>Explore Builds</a></div>
+  </section>
+
+  <!-- STOCK -->
+  <section class="feature" id="stock">
+    <div class="feature-img"><img src="assets/stock.jpg" alt=""></div>
+    <div class="feature-copy"><h2 class="serif" data-split>Available Stock</h2><p>Finished cars ready for a new owner, refined with care and ready to be noticed. Listings TBA.</p><a href="#stock" class="btn" data-btn>Explore Stock</a></div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="contact">
+    <div class="cta-bg"><img src="assets/cta.jpg" alt=""></div>
+    <div class="cta-inner">
+      <p class="label">Are you ready to</p>
+      <h2 class="serif" data-split>Make It<br>Yours</h2>
+      <a href="mailto:hello@example.com" class="btn" data-btn>Start Your Project</a>
+      <p class="cta-contact label">Phone (000) 000-0000 &nbsp;·&nbsp; hello@[domain-TBA].com &nbsp;·&nbsp; Address TBA</p>
+      <a href="#top" class="cta-top label" data-top>Back To Top</a>
+    </div>
+  </section>
 </main>
-<footer class="ftr"><div class="ftr-big">DAVID AUTOMOTIVE</div><div class="ftr-cols"><div><h4>Visit</h4><p>Address TBA<br>City, State TBA</p></div><div><h4>Contact</h4><p>Phone: (000) 000-0000<br>Email: hello@[domain-TBA].com</p></div><div><h4>Hours</h4><p>Mon–Fri · Hours TBA<br>Sat · By appointment</p></div><div><h4>Follow</h4><p>Instagram TBA<br>TikTok TBA</p></div></div><p class="copy">© 2026 David Automotive. All rights reserved.</p></footer>
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-<script src="app.js"></script></body></html>
+
+<footer class="ftr">
+  <nav class="ftr-nav"><a href="#top">Home</a><a href="#builds">Builds</a><a href="#stock">Stock</a><a href="#contact">Contact</a></nav>
+  <div class="ftr-mark"><svg><use href="#mark"/></svg><span>DAVID AUTOMOTIVE</span></div>
+  <p class="ftr-line label">Bespoke vehicles shaped around the driver. Personal by design, never off the shelf.</p>
+  <div class="ftr-legal label"><span>© 2026 David Automotive</span><span>Legal TBA</span><span>Sitemap</span></div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="app.js"></script>
+</body></html>
