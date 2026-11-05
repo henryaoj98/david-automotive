@@ -36,9 +36,22 @@
   // ---------- header / progress / menu ----------
   const body = document.body;
   ScrollTrigger.create({ start: 0, end: 'max', onUpdate: s => { gsap.set('#progress', { scaleX: s.progress }); body.classList.toggle('scrolled', s.scroll() > 40); } });
-  const closeMenu = () => { body.classList.remove('menu-open'); if (!body.classList.contains('is-gated')) lenis.start(); };
-  $('#menuBtn').addEventListener('click', () => { const o = body.classList.toggle('menu-open'); o ? lenis.stop() : lenis.start(); });
-  addEventListener('keydown', e => e.key === 'Escape' && closeMenu());
+  const menuBtn = $('#menuBtn'), menuEl = $('#menu');
+  const setMenu = o => {
+    body.classList.toggle('menu-open', o); menuBtn.setAttribute('aria-expanded', o); menuEl && menuEl.setAttribute('aria-hidden', !o);
+    if (menuEl) menuEl.inert = !o;
+    if (o) { lenis.stop(); setTimeout(() => { const a = $('a', menuEl); a && a.focus(); }, 300); }
+    else if (!body.classList.contains('is-gated')) lenis.start();
+  };
+  const closeMenu = () => { if (!body.classList.contains('menu-open')) return; setMenu(false); menuBtn.focus({ preventScroll: true }); };
+  if (menuEl) menuEl.inert = true;
+  menuBtn.addEventListener('click', () => setMenu(!body.classList.contains('menu-open')));
+  addEventListener('keydown', e => {
+    if (!body.classList.contains('menu-open')) return;
+    if (e.key === 'Escape') closeMenu();
+    if (e.key === 'Tab') { const f = [menuBtn, ...$$('a', menuEl)], i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); } }
+  });
 
   // ---------- hero film: intro clip once, then scroll-scrubbed frame sequence ----------
   const heroTitle = splitLines($('.hero-title'));
@@ -195,5 +208,162 @@
   gsap.fromTo('.cta-bg img', { scale: 1.5 }, { scale: 1.2, ease: 'none', scrollTrigger: { trigger: '.cta', scrub: true } });
   gsap.from('.ftr-nav a', { yPercent: 60, opacity: 0, stagger: .08, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: '.ftr', start: 'top 80%' } });
 
+  // =================== v4 ===================
+  const fine = matchMedia('(hover:hover) and (pointer:fine)').matches;
+  // section heading reveals
+  $$('.process h2,.spec h2,.transform h2,.anatomy h2,.gallery h2,.enquire h2').forEach(h => {
+    const w = splitLines(h); if (reduced) return;
+    gsap.from(w, { yPercent: 110, stagger: .06, duration: 1.4, ease: 'expo.out', scrollTrigger: { trigger: h, start: 'top 85%' } });
+  });
+
+  // ---------- process: line draws, steps light up ----------
+  const steps = $$('.pstep'), pline = $('.process-line i');
+  if (steps.length) {
+    ScrollTrigger.create({ trigger: '.process-list', start: desktop ? 'top 75%' : 'top 70%', end: desktop ? 'bottom 45%' : 'bottom 55%', scrub: !reduced,
+      onUpdate: s => { const p = reduced ? 1 : s.progress; gsap.set(pline, desktop ? { scaleX: p } : { scaleY: p });
+        steps.forEach((st, i) => st.classList.toggle('on', p >= i / steps.length + .02)); } });
+    if (!reduced) gsap.from(steps, { y: 40, opacity: 0, stagger: .12, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: '.process-list', start: 'top 80%' } });
+  }
+
+  // ---------- before / after ----------
+  $$('[data-ba]').forEach(ba => {
+    const h = $('.ba-handle', ba); let pos = 50, drag = false;
+    const set = v => { pos = Math.max(0, Math.min(100, v)); ba.style.setProperty('--pos', pos + '%');
+      h.setAttribute('aria-valuenow', Math.round(pos)); h.setAttribute('aria-valuetext', Math.round(pos) + '% factory'); };
+    const fromEv = e => { const r = ba.getBoundingClientRect(); set((e.clientX - r.left) / r.width * 100); };
+    ba.addEventListener('pointerdown', e => { drag = true; ba.classList.add('drag'); ba.setPointerCapture(e.pointerId); fromEv(e); });
+    ba.addEventListener('pointermove', e => drag && fromEv(e));
+    const end = () => { drag = false; ba.classList.remove('drag'); };
+    ba.addEventListener('pointerup', end); ba.addEventListener('pointercancel', end);
+    h.addEventListener('keydown', e => { const k = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5, PageDown: -20, PageUp: 20 }[e.key];
+      if (k) { e.preventDefault(); set(pos + k); } else if (e.key === 'Home') { e.preventDefault(); set(0); } else if (e.key === 'End') { e.preventDefault(); set(100); } });
+    if (!reduced) { const o = { v: 82 }; ScrollTrigger.create({ trigger: ba, start: 'top 65%', once: true,
+      onEnter: () => gsap.fromTo(o, { v: 82 }, { v: 50, duration: 1.8, ease: 'expo.inOut', onUpdate: () => !drag && set(o.v) }) }); set(82); }
+  });
+
+  // ---------- hotspots ----------
+  const hsBtns = $$('.hs');
+  const closeHs = except => hsBtns.forEach(b => { if (b === except) return; b.setAttribute('aria-expanded', 'false'); $('#' + b.getAttribute('aria-controls')).hidden = true; });
+  hsBtns.forEach(b => b.addEventListener('click', e => { e.stopPropagation();
+    const card = $('#' + b.getAttribute('aria-controls')), open = b.getAttribute('aria-expanded') !== 'true';
+    closeHs(b); b.setAttribute('aria-expanded', open); card.hidden = !open;
+    if (open && desktop) { card.classList.remove('flip'); const r = card.getBoundingClientRect(), st = card.parentNode.getBoundingClientRect(); if (r.right > st.right - 10) card.classList.add('flip'); } }));
+  document.addEventListener('click', e => { if (!e.target.closest('.hs-card')) closeHs(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && hsBtns.some(b => b.getAttribute('aria-expanded') === 'true')) { const b = hsBtns.find(b => b.getAttribute('aria-expanded') === 'true'); closeHs(); b.focus(); } });
+  if (!reduced && hsBtns.length) gsap.from(hsBtns, { scale: 0, opacity: 0, stagger: .12, duration: .8, ease: 'back.out(2)', scrollTrigger: { trigger: '.hs-stage', start: 'top 60%' } });
+
+  // ---------- configurator ----------
+  const specForm = $('.spec-ctrl'), scv = $('.spec-canvas');
+  if (specForm && scv) {
+    const sctx = scv.getContext('2d', { willReadFrequently: false }), stage = $('.spec-stage');
+    const sfx = innerWidth < 1024 ? '-m' : '', cache = {};
+    let cur = null, col = [0, 0, 0, 0], tw = null;
+    const parseC = el => { const v = el.dataset.rgb; return v === '0' ? null : v.split(',').map(Number); };
+    const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+    const load = async t => {
+      if (cache[t]) return cache[t];
+      const [im, mk] = await Promise.all([loadImg(`assets/v4/cfg/${t}${sfx}.webp`), loadImg(`assets/v4/cfg/${t}${sfx}-mask.png`)]);
+      const W = im.naturalWidth, H = im.naturalHeight, c = document.createElement('canvas'); c.width = W; c.height = H;
+      const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0); const base = x.getImageData(0, 0, W, H);
+      x.clearRect(0, 0, W, H); x.drawImage(mk, 0, 0); const md = x.getImageData(0, 0, W, H).data;
+      const idx = [], m = [], L = [];
+      for (let p = 0, n = W * H; p < n; p++) { const a = md[p * 4] / 255; if (a > .01) { idx.push(p); m.push(a); const q = p * 4; L.push((base.data[q] + base.data[q + 1] + base.data[q + 2]) / 765); } }
+      return cache[t] = { W, H, base, idx: Int32Array.from(idx), m: Float32Array.from(m), L: Float32Array.from(L), out: new ImageData(new Uint8ClampedArray(base.data), W, H) };
+    };
+    const render = () => {
+      if (!cur) return; const { idx, m, L, base, out } = cur, b = base.data, o = out.data, [r, g, bl, k] = col;
+      for (let j = 0; j < idx.length; j++) { const q = idx[j] * 4, l = L[j], a = m[j] * k, hi = l > .7 ? (l - .7) * 2 : 0, s = .2 + 1.9 * l;
+        o[q] = b[q] * (1 - a) + Math.min(1, r * s + hi) * 255 * a; o[q + 1] = b[q + 1] * (1 - a) + Math.min(1, g * s + hi) * 255 * a; o[q + 2] = b[q + 2] * (1 - a) + Math.min(1, bl * s + hi) * 255 * a; }
+      if (scv.width !== cur.W) { scv.width = cur.W; scv.height = cur.H; }
+      sctx.putImageData(out, 0, 0);
+    };
+    const tweenTo = c => { const tgt = c ? [...c, 1] : [col[0], col[1], col[2], 0];
+      if (col[3] === 0 && c) col = [...c, 0];
+      tw && tw.kill(); if (reduced) { col = tgt; render(); return; }
+      const o = { r: col[0], g: col[1], b: col[2], k: col[3] };
+      tw = gsap.to(o, { r: tgt[0], g: tgt[1], b: tgt[2], k: tgt[3], duration: .7, ease: 'power2.inOut', onUpdate: () => { col = [o.r, o.g, o.b, o.k]; render(); } }); };
+    const val = n => specForm.elements[n].value;
+    const label = n => { const i = $(`input[name=${n}]:checked`, specForm); return i ? $('span', i.parentNode).textContent.trim() : ''; };
+    const summary = () => `${label('body')} in ${val('finish')}, ${val('wheels')} wheels, ${val('interior')} interior`;
+    const update = () => { $('.spec-sum-text').textContent = summary() + '.'; $('.spec-caption').textContent = `${label('body')} · ${val('finish')}`; };
+    let started = false, bodyNow = null;
+    const showBody = async t => { bodyNow = t; stage.classList.add('loading');
+      try { const d = await load(t); if (bodyNow !== t) return; cur = d; render(); } catch (e) { $('.spec-loading').textContent = 'Preview unavailable'; }
+      stage.classList.remove('loading'); };
+    const start = () => { if (started) return; started = true; col = [...(parseC($('input[name=finish]:checked', specForm)) || [0, 0, 0]), parseC($('input[name=finish]:checked', specForm)) ? 1 : 0]; showBody(val('body')); };
+    specForm.addEventListener('change', e => { update(); if (!started) return start();
+      if (e.target.name === 'body') { if (!reduced) gsap.fromTo(scv, { opacity: .2, x: 30 }, { opacity: 1, x: 0, duration: .8, ease: 'expo.out' }); showBody(e.target.value); }
+      if (e.target.name === 'finish') tweenTo(parseC(e.target)); });
+    update();
+    ScrollTrigger.create({ trigger: '.spec', start: 'top 150%', once: true, onEnter: start });
+    $('[data-spec-send]').addEventListener('click', () => { const f = $('.enq-form'); if (!f) return;
+      f.elements.spec.value = summary(); const t = { suv: 'SUV', coupe: 'Coupé', saloon: 'Saloon' }[val('body')]; f.elements.type.value = t; });
+  }
+
+  // ---------- gallery filter + lightbox ----------
+  const gItems = $$('.g-item');
+  $$('.g-f').forEach(f => f.addEventListener('click', () => {
+    $$('.g-f').forEach(x => { x.classList.toggle('is-on', x === f); x.setAttribute('aria-pressed', x === f); });
+    const c = f.dataset.f, show = gItems.filter(i => c === 'all' || i.dataset.cat === c);
+    gItems.forEach(i => i.classList.toggle('out', !show.includes(i)));
+    if (!reduced) gsap.fromTo(show, { opacity: 0, y: 24 }, { opacity: 1, y: 0, stagger: .04, duration: .7, ease: 'expo.out' });
+    ScrollTrigger.refresh();
+  }));
+  if (!reduced) gItems.forEach(i => gsap.from(i, { y: 60, opacity: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: i, start: 'top 92%' } }));
+  if (gItems.length) {
+    const ico = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+    const lb = document.createElement('div'); lb.className = 'lb'; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('aria-label', 'Image viewer'); lb.inert = true;
+    lb.innerHTML = `<figure><img alt=""><figcaption><b></b><span class="label"></span></figcaption></figure>
+      <button class="lb-x" aria-label="Close">${ico('M5 5l14 14M19 5 5 19')}</button><button class="lb-p" aria-label="Previous image">${ico('M15 5l-7 7 7 7')}</button><button class="lb-n" aria-label="Next image">${ico('M9 5l7 7-7 7')}</button>`;
+    document.body.append(lb);
+    const lim = $('img', lb); let li = 0, opener = null;
+    const vis = () => gItems.filter(i => !i.classList.contains('out')).map(i => $('.g-btn', i));
+    const show = i => { const v = vis(); li = (i + v.length) % v.length; const b = v[li];
+      lim.classList.add('ld'); const n = new Image(); n.onload = () => { lim.src = n.src; lim.alt = $('img', b).alt; lim.classList.remove('ld'); }; n.src = b.dataset.full;
+      $('figcaption b', lb).textContent = b.dataset.cap; $('figcaption span', lb).textContent = `${li + 1} / ${v.length}`; };
+    const open = b => { opener = b; show(vis().indexOf(b)); lb.inert = false; lb.classList.add('open'); lenis.stop(); requestAnimationFrame(() => $('.lb-x', lb).focus()); };
+    const close = () => { lb.classList.remove('open'); lb.inert = true; lenis.start(); opener && opener.focus({ preventScroll: true }); };
+    $$('.g-btn').forEach(b => b.addEventListener('click', () => open(b)));
+    $('.lb-x', lb).onclick = close; $('.lb-p', lb).onclick = () => show(li - 1); $('.lb-n', lb).onclick = () => show(li + 1);
+    lb.addEventListener('click', e => e.target === lb && close());
+    addEventListener('keydown', e => { if (!lb.classList.contains('open')) return; if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') show(li - 1); if (e.key === 'ArrowRight') show(li + 1);
+      if (e.key === 'Tab') { const f = $$('button', lb), k = f.indexOf(document.activeElement); if (e.shiftKey && k <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && k === f.length - 1) { e.preventDefault(); f[0].focus(); } } });
+    let sx = null; lb.addEventListener('touchstart', e => sx = e.touches[0].clientX, { passive: true });
+    lb.addEventListener('touchend', e => { if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) show(li + (dx < 0 ? 1 : -1)); sx = null; });
+  }
+
+  // ---------- enquiry (preview only: no network send) ----------
+  const ef = $('.enq-form');
+  if (ef) {
+    const stepsEl = $$('.enq-step', ef), dots = $$('.enq-steps li'), back = $('.enq-back', ef), next = $('.enq-next', ef), status = $('.enq-status', ef);
+    let st = 0;
+    const go = n => { stepsEl[st].hidden = true; stepsEl[st].classList.remove('is-on'); st = n; stepsEl[st].hidden = false; stepsEl[st].classList.add('is-on');
+      dots.forEach((d, i) => d.classList.toggle('is-on', i <= st)); $('.enq-bar i', ef).style.width = ((st + 1) / 3 * 100) + '%';
+      back.hidden = st === 0; next.textContent = st === 2 ? 'Prepare Enquiry' : 'Continue'; status.textContent = '';
+      const f = $('input,select,textarea', stepsEl[st]); f && f.focus({ preventScroll: true }); };
+    const msgFor = el => el.validity.valueMissing ? 'Required' : el.validity.typeMismatch ? 'Enter a valid email' : el.validity.tooShort ? `At least ${el.minLength} characters` : '';
+    const check = () => { let first = null;
+      $$('input,select,textarea', stepsEl[st]).forEach(el => { const fld = el.closest('.fld'); let er = fld && $('.err', fld);
+        const bad = !el.checkValidity(); el.setAttribute('aria-invalid', bad);
+        if (bad) { if (!er) { er = document.createElement('span'); er.className = 'err'; er.id = 'err-' + el.name; fld.append(er); } er.textContent = msgFor(el); el.setAttribute('aria-describedby', er.id); first = first || el; }
+        else if (er) { er.remove(); el.removeAttribute('aria-describedby'); } });
+      if (first) { status.textContent = 'Please check the highlighted fields.'; first.focus(); return false; } return true; };
+    $$('input,textarea', ef).forEach(el => el.addEventListener('input', () => { if (el.getAttribute('aria-invalid') === 'true' && el.checkValidity()) { el.setAttribute('aria-invalid', 'false'); const er = $('.err', el.closest('.fld')); er && er.remove(); } }));
+    back.addEventListener('click', () => go(st - 1));
+    ef.addEventListener('submit', e => { e.preventDefault(); if (!check()) return; if (st < 2) return go(st + 1);
+      const d = new FormData(ef), svc = d.getAll('svc').join(', ');
+      const bodyTxt = `Name: ${d.get('name')}\nEmail: ${d.get('email')}\nPhone: ${d.get('phone') || '-'}\nCar: ${d.get('car')}\nBody type: ${d.get('type') || '-'}\nTimeline: ${d.get('when') || '-'}\nInterested in: ${svc || '-'}\nSpec: ${d.get('spec') || '-'}\n\n${d.get('msg')}`;
+      $('[data-mailto]', ef).href = 'mailto:hello@example.com?subject=' + encodeURIComponent('Build enquiry: ' + d.get('car')) + '&body=' + encodeURIComponent(bodyTxt);
+      stepsEl[st].hidden = true; ef.classList.add('done'); $('.enq-bar i', ef).style.width = '100%'; const done = $('.enq-done', ef); done.hidden = false; done.focus();
+      // TODO(David Automotive): POST FormData to the real endpoint here.
+    });
+  }
+
+  // ---------- magnetic buttons (desktop fine pointer) ----------
+  if (fine && !reduced) $$('.btn,.g-f').forEach(b => {
+    const mx = gsap.quickTo(b, 'x', { duration: .6, ease: 'power3.out' }), my = gsap.quickTo(b, 'y', { duration: .6, ease: 'power3.out' });
+    b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); mx((e.clientX - r.left - r.width / 2) * .22); my((e.clientY - r.top - r.height / 2) * .3); });
+    b.addEventListener('pointerleave', () => { mx(0); my(0); });
+  });
   addEventListener('load', () => ScrollTrigger.refresh());
 })();
