@@ -27,9 +27,23 @@
   $$('[data-btn]').forEach(b => { const t = b.textContent.trim(); b.innerHTML = '<span class="chs">' + [...t].map((c, i) => `<span class="ch" style="transition-delay:${i * .02}s">${c === ' ' ? ' ' : c}</span>`).join('') + '</span>'; });
 
   // ---------- smooth scroll ----------
-  const lenis = new Lenis({ duration: 1.25, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
-  lenis.on('scroll', ScrollTrigger.update);
-  gsap.ticker.add(t => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0);
+  // mobile-lite: touch / narrow screens get native scroll and cheaper effects
+  const lite = matchMedia('(pointer:coarse)').matches || innerWidth <= 820;
+  document.documentElement.classList.toggle('lite', lite);
+  ScrollTrigger.config({ ignoreMobileResize: true });
+  let lenis;
+  if (!lite) {
+    lenis = new Lenis({ duration: 1.25, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(t => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0);
+  } else {
+    // native scroll shim with the same small API
+    const root = document.documentElement; let tw = 0;
+    lenis = { stop() { root.style.overflow = 'hidden'; }, start() { root.style.overflow = ''; },
+      scrollTo(t, o = {}) { const y1 = typeof t === 'number' ? t : t.getBoundingClientRect().top + scrollY, y0 = scrollY, d = (o.duration || 1) * 1000, e = o.easing || (k => 1 - Math.pow(1 - k, 3)), t0 = performance.now(), id = ++tw;
+        const f = n => { if (id !== tw) return; const k = Math.min(1, (n - t0) / d); scrollTo(0, y0 + (y1 - y0) * e(k)); k < 1 ? requestAnimationFrame(f) : o.onComplete && o.onComplete(); }; requestAnimationFrame(f);
+        const cancel = () => { tw++; removeEventListener('touchstart', cancel); }; addEventListener('touchstart', cancel, { passive: true }); } };
+  }
   lenis.stop();
   $$('a[href^="#"]').forEach(a => a.addEventListener('click', e => { const id = a.getAttribute('href'); const t = id === '#top' ? 0 : $(id); if (t === null) return; e.preventDefault(); closeMenu(); lenis.scrollTo(t, { duration: 1.8 }); }));
 
@@ -58,13 +72,23 @@
   gsap.set(heroTitle, { yPercent: 110 }); gsap.set('.hero-sub', { opacity: 0, y: 20 });
   const hero = $('.hero'), vid = $('.hero-intro'), cv = $('.hero-canvas'), ctx = cv.getContext('2d'), tiltEl = $('.hero-tilt');
   const small = innerWidth < 1024;
-  const FRAMES = 121, dir = small ? 'video/scroll-m/' : 'video/scroll-d/';
+  const FRAMES = lite ? 61 : 121, STEP = lite ? 2 : 1, dir = small ? 'video/scroll-m/' : 'video/scroll-d/';
   vid.src = small ? 'video/intro-m.mp4' : 'video/intro-d.mp4';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const imgs = [];
-  for (let i = 0; i < FRAMES; i++) { const im = new Image(); im.decoding = 'async'; im.src = `${dir}${String(i + 1).padStart(3, '0')}.webp`; imgs[i] = im; }
+  const frameSrc = i => `${dir}${String(i * STEP + 1).padStart(3, '0')}.webp`;
+  if (!lite) for (let i = 0; i < FRAMES; i++) { const im = new Image(); im.decoding = 'async'; im.src = frameSrc(i); imgs[i] = im; }
+  else {
+    // lite: frames load a few at a time and are decoded off the main thread before use
+    for (let i = 0; i < FRAMES; i++) imgs[i] = { complete: false, naturalWidth: 0 };
+    let next = 0; const order = [0]; for (let gap = 32; gap >= 1; gap >>= 1) for (let i = gap; i < FRAMES; i += gap) if (!order.includes(i)) order.push(i);
+    const pump = () => { if (next >= order.length) return; const i = order[next++], im = new Image(); im.src = frameSrc(i);
+      im.decode().then(() => (window.createImageBitmap ? createImageBitmap(im) : im)).then(bm => { bm.complete = true; bm.naturalWidth = bm.naturalWidth || bm.width; bm.naturalHeight = bm.naturalHeight || bm.height; imgs[i] = bm; if (i === 0 || Math.abs(i - lastWanted) < 3) { curFrame = -1; draw(lastWanted); } }).catch(() => {}).finally(pump); };
+    const startPump = () => { for (let k = 0; k < 3; k++) pump(); };
+    window.__startFrames = startPump;
+  }
   let curFrame = -1;
-  const sizeCanvas = () => { const d = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d); curFrame = -1; draw(lastWanted); };
+  const sizeCanvas = () => { const d = Math.min(devicePixelRatio || 1, lite ? 1.5 : 2); cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d); curFrame = -1; draw(lastWanted); };
   const drawCover = im => { const cw = cv.width, ch = cv.height, portrait = ch > cw;
     const s = portrait ? cw * 1.7 / im.naturalWidth : Math.max(cw / im.naturalWidth, ch / im.naturalHeight);
     if (portrait) ctx.clearRect(0, 0, cw, ch);
@@ -77,7 +101,7 @@
     const im = imgs[k]; if (!im.complete || !im.naturalWidth || k === curFrame) return;
     curFrame = k; drawCover(im);
   }
-  imgs[0].onload = () => draw(lastWanted);
+  if (!lite) imgs[0].onload = () => draw(lastWanted);
   addEventListener('resize', sizeCanvas); sizeCanvas();
 
   let introDone = false;
@@ -89,8 +113,9 @@
   };
   const enter = () => {
     $('#gate').classList.add('out'); body.classList.remove('is-gated'); lenis.start(); scrollTo(0, 0);
-    if (reduced) { finishIntro(); playText(.2); return; }
+    if (reduced) { finishIntro(); playText(.2); lite && window.__startFrames(); return; }
     vid.currentTime = 0; const p = vid.play(); if (p && p.catch) p.catch(finishIntro);
+    if (lite) { let st = false; const go = () => { if (st) return; st = true; window.__startFrames(); }; vid.addEventListener('ended', go); setTimeout(go, 2500); addEventListener('scroll', go, { once: true, passive: true }); }
     playText(1.4);
   };
   window.__heroVid = vid;
@@ -107,11 +132,11 @@
       draw(Math.round(introSeg * (FRAMES - 1)));
       armSnap(s);
     } } });
-  ht.to('.hero-title', { opacity: 0, y: -80, filter: 'blur(8px)', duration: D * .35 }, 0)
+  ht.to('.hero-title', lite ? { opacity: 0, y: -80, duration: D * .35 } : { opacity: 0, y: -80, filter: 'blur(8px)', duration: D * .35 }, 0)
     .to('.hero-sub', { opacity: 0, duration: D * .2 }, 0)
     .to('.hero-vignette', { opacity: 1, duration: D }, 0)
     .to('.hero-media', { opacity: 0, duration: .1, ease: 'power1.in' }, D)
-    .fromTo(stChars, { opacity: 0, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0px)', stagger: .004, duration: .05, ease: 'none' }, D + .07)
+    .fromTo(stChars, lite ? { opacity: 0 } : { opacity: 0, filter: 'blur(6px)' }, lite ? { opacity: 1, stagger: .004, duration: .05, ease: 'none' } : { opacity: 1, filter: 'blur(0px)', stagger: .004, duration: .05, ease: 'none' }, D + .07)
     .to('.hero-statement', { opacity: 0, y: -60, duration: .1 }, .9);
 
   // snap forward: stop past 60% of the drive-in and it glides to the end of the clip (2s)
@@ -174,10 +199,11 @@
   }
 
   // ---------- service intro highlight ----------
-  const hl = splitChars($('[data-highlight]'));
+  let hl = splitChars($('[data-highlight]'));
+  if (lite) hl = $$('[data-highlight] .word');
   gsap.to(hl, { keyframes: { color: ['rgba(242,241,237,.18)', '#c0392b', '#F2F1ED'] }, stagger: .02, ease: 'none',
     scrollTrigger: { trigger: '.svc-intro', start: 'top 70%', end: 'center 40%', scrub: true } });
-  gsap.fromTo('.svc-intro-media img', { yPercent: -10 }, { yPercent: 10, ease: 'none', scrollTrigger: { trigger: '.svc-intro-media', scrub: true } });
+  if (!lite) gsap.fromTo('.svc-intro-media img', { yPercent: -10 }, { yPercent: 10, ease: 'none', scrollTrigger: { trigger: '.svc-intro-media', scrub: true } });
   gsap.from('.svc-intro-media', { clipPath: 'inset(100% 0 0 0)', duration: 1.6, ease: 'expo.inOut', scrollTrigger: { trigger: '.svc-intro-media', start: 'top 85%' } });
 
   // ---------- services split screen ----------
@@ -188,8 +214,16 @@
   });
 
   // ---------- "standard stops here" ----------
-  const et = gsap.timeline({ scrollTrigger: { trigger: '.ends', start: 'top top', end: 'bottom bottom', scrub: true } });
-  et.fromTo('.ends-img', { width: desktop ? '46vw' : '84vw', height: desktop ? '56vh' : '46vh' }, { width: '100vw', height: '100vh', ease: 'power1.inOut', duration: .5 }, 0)
+  const et = gsap.timeline({ scrollTrigger: { trigger: '.ends', start: 'top top', end: 'bottom bottom', scrub: lite ? .3 : true } });
+  if (lite) { // compositor-friendly: full-size image revealed by clip-path, darkened by an overlay's opacity
+    const dim = document.createElement('i'); dim.className = 'ends-dim'; $('.ends-img').append(dim);
+    et.fromTo('.ends-img', { clipPath: 'inset(27% 8% 27% 8%)' }, { clipPath: 'inset(0% 0% 0% 0%)', ease: 'power1.inOut', duration: .5 }, 0)
+      .fromTo('.ends-img img', { scale: 1.2 }, { scale: 1, duration: .5 }, 0)
+      .to('.ends-word', { opacity: 0, scale: .9, duration: .2 }, .45)
+      .fromTo(dim, { opacity: .3 }, { opacity: .65, duration: .2 }, .5)
+      .fromTo('.ends-copy', { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: .25 }, .6)
+      .to({}, { duration: .2 });
+  } else et.fromTo('.ends-img', { width: desktop ? '46vw' : '84vw', height: desktop ? '56vh' : '46vh' }, { width: '100vw', height: '100vh', ease: 'power1.inOut', duration: .5 }, 0)
     .fromTo('.ends-img img', { scale: 1.2 }, { scale: 1, duration: .5 }, 0)
     .to('.ends-word', { opacity: 0, scale: .9, duration: .2 }, .45)
     .to('.ends-img img', { filter: 'brightness(.35)', duration: .2 }, .5)
@@ -198,14 +232,14 @@
 
   // ---------- features / cta ----------
   $$('.feature').forEach(f => {
-    gsap.fromTo($('.feature-img', f), { yPercent: -8 }, { yPercent: 8, ease: 'none', scrollTrigger: { trigger: f, scrub: true } });
+    if (!lite) gsap.fromTo($('.feature-img', f), { yPercent: -8 }, { yPercent: 8, ease: 'none', scrollTrigger: { trigger: f, scrub: true } });
     const w = splitLines($('h2', f));
     gsap.from(w, { yPercent: 110, stagger: .06, duration: 1.4, ease: 'expo.out', scrollTrigger: { trigger: f, start: 'top 55%' } });
     gsap.from([$('p', f), $('.btn', f)], { opacity: 0, y: 30, stagger: .1, duration: 1.2, ease: 'expo.out', delay: .2, scrollTrigger: { trigger: f, start: 'top 55%' } });
   });
   const cw = splitLines($('.cta h2'));
   gsap.from(cw, { yPercent: 110, stagger: .08, duration: 1.5, ease: 'expo.out', scrollTrigger: { trigger: '.cta', start: 'top 55%' } });
-  gsap.fromTo('.cta-bg img', { scale: 1.5 }, { scale: 1.2, ease: 'none', scrollTrigger: { trigger: '.cta', scrub: true } });
+  if (!lite) gsap.fromTo('.cta-bg img', { scale: 1.5 }, { scale: 1.2, ease: 'none', scrollTrigger: { trigger: '.cta', scrub: true } });
   gsap.from('.ftr-nav a', { yPercent: 60, opacity: 0, stagger: .08, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: '.ftr', start: 'top 80%' } });
 
   // =================== v4 ===================
@@ -266,9 +300,13 @@
       const W = im.naturalWidth, H = im.naturalHeight, c = document.createElement('canvas'); c.width = W; c.height = H;
       const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0); const base = x.getImageData(0, 0, W, H);
       x.clearRect(0, 0, W, H); x.drawImage(mk, 0, 0); const md = x.getImageData(0, 0, W, H).data;
-      const idx = [], m = [], L = [];
-      for (let p = 0, n = W * H; p < n; p++) { const a = md[p * 4] / 255; if (a > .01) { idx.push(p); m.push(a); const q = p * 4; L.push((base.data[q] + base.data[q + 1] + base.data[q + 2]) / 765); } }
-      return cache[t] = { W, H, base, idx: Int32Array.from(idx), m: Float32Array.from(m), L: Float32Array.from(L), out: new ImageData(new Uint8ClampedArray(base.data), W, H) };
+      const n = W * H, idx = new Int32Array(n), m = new Float32Array(n), L = new Float32Array(n), bd = base.data; let cnt = 0;
+      // chunked so building the paint mask never blocks a scroll frame for long
+      for (let p0 = 0; p0 < n; p0 += 65536) {
+        for (let p = p0, e = Math.min(n, p0 + 65536); p < e; p++) { const a = md[p * 4]; if (a > 2) { const q = p * 4; idx[cnt] = p; m[cnt] = a / 255; L[cnt] = (bd[q] + bd[q + 1] + bd[q + 2]) / 765; cnt++; } }
+        await new Promise(r => setTimeout(r, 0));
+      }
+      return cache[t] = { W, H, base, idx: idx.subarray(0, cnt), m: m.subarray(0, cnt), L: L.subarray(0, cnt), out: new ImageData(new Uint8ClampedArray(bd), W, H) };
     };
     const render = () => {
       if (!cur) return; const { idx, m, L, base, out } = cur, b = base.data, o = out.data, [r, g, bl, k] = col;
@@ -295,7 +333,7 @@
       if (e.target.name === 'body') { if (!reduced) gsap.fromTo(scv, { opacity: .2, x: 30 }, { opacity: 1, x: 0, duration: .8, ease: 'expo.out' }); showBody(e.target.value); }
       if (e.target.name === 'finish') tweenTo(parseC(e.target)); });
     update();
-    ScrollTrigger.create({ trigger: '.spec', start: 'top 150%', once: true, onEnter: start });
+    ScrollTrigger.create({ trigger: '.spec', start: 'top 150%', once: true, onEnter: () => (window.requestIdleCallback || setTimeout)(start) });
     $('[data-spec-send]').addEventListener('click', () => { const f = $('.enq-form'); if (!f) return;
       f.elements.spec.value = summary(); const t = { suv: 'SUV', coupe: 'Coupé', saloon: 'Saloon' }[val('body')]; f.elements.type.value = t; });
   }
